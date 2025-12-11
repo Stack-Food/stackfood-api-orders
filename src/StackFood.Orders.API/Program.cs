@@ -5,7 +5,9 @@ using StackFood.Orders.Application.UseCases;
 using StackFood.Orders.Infrastructure.ExternalServices;
 using StackFood.Orders.Infrastructure.Persistence;
 using StackFood.Orders.Infrastructure.Persistence.Repositories;
+using StackFood.Orders.Infrastructure.Consumers;
 using Amazon.SimpleNotificationService;
+using Amazon.SQS;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +51,7 @@ builder.Services.AddScoped<CreateOrderUseCase>();
 builder.Services.AddScoped<GetOrderByIdUseCase>();
 builder.Services.AddScoped<GetAllOrdersUseCase>();
 builder.Services.AddScoped<CancelOrderUseCase>();
+builder.Services.AddScoped<UpdateOrderStatusUseCase>();
 
 // HttpClient for Products Service
 builder.Services.AddHttpClient<IProductService, ProductService>(client =>
@@ -90,6 +93,29 @@ builder.Services.AddSingleton<IEventPublisher>(sp =>
     };
     return new SNSEventPublisher(snsClient, topicArns);
 });
+
+// AWS SQS Configuration
+builder.Services.AddSingleton<IAmazonSQS>(sp =>
+{
+    if (useLocalStack)
+    {
+        var serviceUrl = builder.Configuration["AWS:LocalStack:ServiceUrl"] ?? "http://localhost:4566";
+        var config = new Amazon.SQS.AmazonSQSConfig
+        {
+            ServiceURL = serviceUrl,
+            AuthenticationRegion = "us-east-1"
+        };
+        return new AmazonSQSClient("test", "test", config);
+    }
+    else
+    {
+        return new AmazonSQSClient();
+    }
+});
+
+// Background Services - Event Consumers
+builder.Services.AddHostedService<PaymentEventsConsumer>();
+builder.Services.AddHostedService<ProductionEventsConsumer>();
 
 // Health Checks
 builder.Services.AddHealthChecks()
