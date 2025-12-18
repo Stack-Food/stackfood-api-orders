@@ -1,8 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using StackFood.Orders.Application.Interfaces;
 namespace StackFood.Orders.Infrastructure.ExternalServices;
+
+[ExcludeFromCodeCoverage]
 public class SNSEventPublisher : IEventPublisher
 {
     private readonly IAmazonSimpleNotificationService _snsClient;
