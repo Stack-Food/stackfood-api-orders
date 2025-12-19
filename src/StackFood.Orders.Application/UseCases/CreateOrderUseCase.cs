@@ -1,5 +1,6 @@
 using StackFood.Orders.Application.DTOs;
 using StackFood.Orders.Application.Interfaces;
+using StackFood.Orders.Application.UseCases.Mappers;
 using StackFood.Orders.Domain.Entities;
 using StackFood.Orders.Domain.Events;
 using StackFood.Orders.Domain.ValueObjects;
@@ -55,28 +56,6 @@ public class CreateOrderUseCase
 
         await _eventPublisher.PublishAsync("OrderCreated", orderEvent);
 
-        return MapToDTO(createdOrder);
-    }
-
-    private static OrderDTO MapToDTO(Order order)
-    {
-        return new OrderDTO
-        {
-            Id = order.Id,
-            CustomerId = order.CustomerId,
-            CustomerName = order.CustomerName,
-            Status = order.Status.ToString(),
-            TotalAmount = order.TotalAmount.Amount,
-            Items = order.Items.Select(i => new OrderItemDTO
-            {
-                Id = i.Id,
-                ProductId = i.ProductId,
-                ProductName = i.ProductName,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice.Amount,
-                TotalPrice = i.TotalPrice.Amount
-            }).ToList(),
-            CreatedAt = order.CreatedAt
-        };
+        return OrderMapper.MapToDTO(createdOrder);
     }
 }
