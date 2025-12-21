@@ -2,77 +2,79 @@ version: '3.8'
 
 services:
   # PostgreSQL Database for Orders
-  postgres-orders:
-    image: postgres:15.3-alpine
-    container_name: stackfood-orders-db
-    environment:
-      POSTGRES_DB: stackfood_orders
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5435:5432"
-    volumes:
-      - orders-postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - stackfood-network
+  # postgres-orders:
+  #   image: postgres:15.3-alpine
+  #   container_name: stackfood-orders-db
+  #   environment:
+  #     POSTGRES_DB: stackfood_orders
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #   ports:
+  #     - "5435:5432"
+  #   volumes:
+  #     - orders-postgres-data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - stackfood-network
 
   # LocalStack for AWS Services (SNS/SQS)
-  localstack:
-    image: localstack/localstack:latest
-    container_name: stackfood-localstack
-    environment:
-      - SERVICES=sns,sqs
-      - DEBUG=1
-      - DATA_DIR=/tmp/localstack/data
-      - DOCKER_HOST=unix:///var/run/docker.sock
-    ports:
-      - "4566:4566"
-      - "4571:4571"
-    volumes:
-      - localstack-data:/tmp/localstack
-      - /var/run/docker.sock:/var/run/docker.sock
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - stackfood-network
+  # localstack:
+  #   image: localstack/localstack:latest
+  #   container_name: stackfood-localstack
+  #   environment:
+  #     - SERVICES=sns,sqs
+  #     - DEBUG=1
+  #     - DATA_DIR=/tmp/localstack/data
+  #     - DOCKER_HOST=unix:///var/run/docker.sock
+  #   ports:
+  #     - "4566:4566"
+  #     - "4571:4571"
+  #   volumes:
+  #     - localstack-data:/tmp/localstack
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - stackfood-network
 
   # Orders API
   orders-api:
     build:
-      context: .
+      context: ./stackfood-api-orders
       dockerfile: Dockerfile
     container_name: stackfood-orders-api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8081
-      - ConnectionStrings__DefaultConnection=Host=postgres-orders;Port=5432;Database=stackfood_orders;Username=postgres;Password=postgres
-      - ExternalServices__ProductsApiUrl=http://host.docker.internal:8080
-      - AWS__UseLocalStack=true
-      - AWS__LocalStack__ServiceUrl=http://localstack:4566
-      - AWS__SNS__OrderCreatedTopicArn=arn:aws:sns:us-east-1:000000000000:OrderCreated
-      - AWS__SNS__OrderCancelledTopicArn=arn:aws:sns:us-east-1:000000000000:OrderCancelled
-      - AWS__SNS__OrderCompletedTopicArn=arn:aws:sns:us-east-1:000000000000:OrderCompleted
+      - ConnectionStrings__DefaultConnection=Host=stackfood-db.c3y2wwk4o98q.us-east-1.rds.amazonaws.com;Port=5432;Database=stackfood_orders;Username=stackfood;Password=postgres
+      - ExternalServices__ProductsApiUrl=http://products-api:8080
+      - AWS__UseLocalStack=false
+      - AWS__Region=us-east-1
+      - AWS__SQS__PaymentEventsQueueUrl=https://sqs.us-east-1.amazonaws.com/471112618001/stackfood-sqs-orders-payment-events
+      - AWS__SQS__ProductionEventsQueueUrl=https://sqs.us-east-1.amazonaws.com/471112618001/stackfood-sqs-orders-production-events
+      - AWS__SNS__OrderCreatedTopicArn=arn:aws:sns:us-east-1:471112618001:stackfood-sns-orders-created
+      - AWS__SNS__OrderCancelledTopicArn=arn:aws:sns:us-east-1:471112618001:stackfood-sns-orders-cancelled
+      - AWS__SNS__OrderCompletedTopicArn=arn:aws:sns:us-east-1:471112618001:stackfood-sns-orders-completed
+      - AWS_ACCESS_KEY_ID=ASIAW3MEACAI6EOCCZAU
+      - AWS_SECRET_ACCESS_KEY=aHsSic4w+xMMPHycEMxMNjJNETvdaoi/BYCfVOC4
     ports:
       - "8081:8081"
     depends_on:
-      postgres-orders:
-        condition: service_healthy
-      localstack:
-        condition: service_healthy
+      products-api:
+        condition: service_started
     networks:
       - stackfood-network
+    restart: unless-stopped
 
 volumes:
   orders-postgres-data:
-  localstack-data:
 
 networks:
   stackfood-network:

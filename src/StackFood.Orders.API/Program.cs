@@ -63,6 +63,8 @@ builder.Services.AddHttpClient<IProductService, ProductService>(client =>
 
 // AWS SNS Configuration
 var useLocalStack = builder.Configuration.GetValue<bool>("AWS:UseLocalStack");
+var awsRegion = builder.Configuration["AWS:Region"] ?? "us-east-1";
+
 builder.Services.AddSingleton<IAmazonSimpleNotificationService>(sp =>
 {
     if (useLocalStack)
@@ -71,13 +73,17 @@ builder.Services.AddSingleton<IAmazonSimpleNotificationService>(sp =>
         var config = new AmazonSimpleNotificationServiceConfig
         {
             ServiceURL = serviceUrl,
-            AuthenticationRegion = "us-east-1"
+            AuthenticationRegion = awsRegion
         };
         return new AmazonSimpleNotificationServiceClient("test", "test", config);
     }
     else
     {
-        return new AmazonSimpleNotificationServiceClient();
+        var config = new AmazonSimpleNotificationServiceConfig
+        {
+            RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(awsRegion)
+        };
+        return new AmazonSimpleNotificationServiceClient(config);
     }
 });
 
@@ -89,7 +95,8 @@ builder.Services.AddSingleton<IEventPublisher>(sp =>
     {
         { "OrderCreated", builder.Configuration["AWS:SNS:OrderCreatedTopicArn"] ?? "arn:aws:sns:us-east-1:000000000000:OrderCreated" },
         { "OrderCancelled", builder.Configuration["AWS:SNS:OrderCancelledTopicArn"] ?? "arn:aws:sns:us-east-1:000000000000:OrderCancelled" },
-        { "OrderCompleted", builder.Configuration["AWS:SNS:OrderCompletedTopicArn"] ?? "arn:aws:sns:us-east-1:000000000000:OrderCompleted" }
+        { "OrderCompleted", builder.Configuration["AWS:SNS:OrderCompletedTopicArn"] ?? "arn:aws:sns:us-east-1:000000000000:OrderCompleted" },
+        { "PaymentApproved", "arn:aws:sns:us-east-1:471112618001:stackfood-sns-production-topic" }
     };
     return new SNSEventPublisher(snsClient, topicArns);
 });
@@ -103,13 +110,17 @@ builder.Services.AddSingleton<IAmazonSQS>(sp =>
         var config = new Amazon.SQS.AmazonSQSConfig
         {
             ServiceURL = serviceUrl,
-            AuthenticationRegion = "us-east-1"
+            AuthenticationRegion = awsRegion
         };
         return new AmazonSQSClient("test", "test", config);
     }
     else
     {
-        return new AmazonSQSClient();
+        var config = new Amazon.SQS.AmazonSQSConfig
+        {
+            RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(awsRegion)
+        };
+        return new AmazonSQSClient(config);
     }
 });
 

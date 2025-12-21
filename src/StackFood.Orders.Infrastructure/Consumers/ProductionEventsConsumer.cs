@@ -78,10 +78,23 @@ public class ProductionEventsConsumer : BackgroundService
 
     private async Task ProcessMessageAsync(Message message)
     {
-        var productionEvent = JsonSerializer.Deserialize<ProductionEventMessage>(message.Body);
+        // SNS wraps the message in a JSON envelope
+        var snsMessage = JsonSerializer.Deserialize<SnsMessageWrapper>(message.Body);
+        if (snsMessage?.Message == null)
+        {
+            _logger.LogWarning("Invalid SNS message format: {Body}", message.Body);
+            return;
+        }
+
+        // Deserialize the actual production event
+        var productionEvent = JsonSerializer.Deserialize<ProductionEventMessage>(snsMessage.Message, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+
         if (productionEvent == null)
         {
-            _logger.LogWarning("Failed to deserialize production event: {Body}", message.Body);
+            _logger.LogWarning("Failed to deserialize production event: {Message}", snsMessage.Message);
             return;
         }
 
@@ -119,4 +132,13 @@ public class ProductionEventMessage
     public Guid OrderId { get; set; }
     public string? OrderNumber { get; set; }
     public DateTime Timestamp { get; set; }
+}
+
+// Helper class to deserialize SNS message wrapper
+public class SnsMessageWrapper
+{
+    public string? Message { get; set; }
+    public string? MessageId { get; set; }
+    public string? TopicArn { get; set; }
+    public string? Type { get; set; }
 }

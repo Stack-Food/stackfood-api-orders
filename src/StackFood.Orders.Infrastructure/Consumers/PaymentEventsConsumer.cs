@@ -78,32 +78,45 @@ public class PaymentEventsConsumer : BackgroundService
 
     private async Task ProcessMessageAsync(Message message)
     {
-        var paymentEvent = JsonSerializer.Deserialize<PaymentEventMessage>(message.Body);
+        // SNS wraps the message in a JSON envelope
+        var snsMessage = JsonSerializer.Deserialize<SnsMessageWrapper>(message.Body);
+        if (snsMessage?.Message == null)
+        {
+            _logger.LogWarning("Invalid SNS message format: {Body}", message.Body);
+            return;
+        }
+
+        // Deserialize the actual payment event
+        var paymentEvent = JsonSerializer.Deserialize<PaymentEventMessage>(snsMessage.Message, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+
         if (paymentEvent == null)
         {
-            _logger.LogWarning("Failed to deserialize payment event: {Body}", message.Body);
+            _logger.LogWarning("Failed to deserialize payment event: {Message}", snsMessage.Message);
             return;
         }
 
         using var scope = _serviceProvider.CreateScope();
         var updateStatusUseCase = scope.ServiceProvider.GetRequiredService<UpdateOrderStatusUseCase>();
 
-        switch (paymentEvent.Status?.ToLower())
+        switch (paymentEvent.EventType?.ToLower())
         {
-            case "approved":
+            case "paymentapproved":
                 await updateStatusUseCase.ApprovePaymentAsync(paymentEvent.OrderId);
                 _logger.LogInformation("Payment approved for order {OrderId}", paymentEvent.OrderId);
                 break;
 
-            case "rejected":
-            case "cancelled":
+            case "paymentrejected":
+            case "paymentcancelled":
                 await updateStatusUseCase.RejectPaymentAsync(paymentEvent.OrderId, paymentEvent.Reason ?? "Payment rejected");
                 _logger.LogInformation("Payment rejected for order {OrderId}", paymentEvent.OrderId);
                 break;
 
             default:
-                _logger.LogWarning("Unknown payment status: {Status} for order {OrderId}",
-                    paymentEvent.Status, paymentEvent.OrderId);
+                _logger.LogWarning("Unknown payment event type: {EventType} for order {OrderId}",
+                    paymentEvent.EventType, paymentEvent.OrderId);
                 break;
         }
     }
@@ -111,8 +124,21 @@ public class PaymentEventsConsumer : BackgroundService
 
 public class PaymentEventMessage
 {
+    public string? EventType { get; set; }
+    public Guid PaymentId { get; set; }
     public Guid OrderId { get; set; }
-    public string? Status { get; set; }
+    public string? OrderNumber { get; set; }
     public string? Reason { get; set; }
+    public decimal Amount { get; set; }
     public DateTime Timestamp { get; set; }
+    public DateTime? ApprovedAt { get; set; }
+}
+
+// Helper class to deserialize SNS message wrapper
+public class SnsMessageWrapper
+{
+    public string? Message { get; set; }
+    public string? MessageId { get; set; }
+    public string? TopicArn { get; set; }
+    public string? Type { get; set; }
 }

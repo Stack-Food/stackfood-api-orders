@@ -8,6 +8,7 @@ COPY ["src/StackFood.Orders.Domain/StackFood.Orders.Domain.csproj", "src/StackFo
 COPY ["src/StackFood.Orders.Application/StackFood.Orders.Application.csproj", "src/StackFood.Orders.Application/"]
 COPY ["src/StackFood.Orders.Infrastructure/StackFood.Orders.Infrastructure.csproj", "src/StackFood.Orders.Infrastructure/"]
 COPY ["src/StackFood.Orders.API/StackFood.Orders.API.csproj", "src/StackFood.Orders.API/"]
+COPY ["tests/StackFood.Orders.Tests/StackFood.Orders.Tests.csproj", "tests/StackFood.Orders.Tests/"]
 
 # Restore dependencies
 RUN dotnet restore "StackFood.Orders.sln"
