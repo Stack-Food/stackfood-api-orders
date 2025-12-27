@@ -133,12 +133,3 @@ public class ProductionEventMessage
     public string? OrderNumber { get; set; }
     public DateTime Timestamp { get; set; }
 }
-
-// Helper class to deserialize SNS message wrapper
-public class SnsMessageWrapper
-{
-    public string? Message { get; set; }
-    public string? MessageId { get; set; }
-    public string? TopicArn { get; set; }
-    public string? Type { get; set; }
-}

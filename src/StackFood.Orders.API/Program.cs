@@ -91,6 +91,7 @@ builder.Services.AddSingleton<IAmazonSimpleNotificationService>(sp =>
 builder.Services.AddSingleton<IEventPublisher>(sp =>
 {
     var snsClient = sp.GetRequiredService<IAmazonSimpleNotificationService>();
+    var logger = sp.GetRequiredService<ILogger<SNSEventPublisher>>();
     var topicArns = new Dictionary<string, string>
     {
         { "OrderCreated", builder.Configuration["AWS:SNS:OrderCreatedTopicArn"] ?? "arn:aws:sns:us-east-1:000000000000:OrderCreated" },
@@ -98,7 +99,7 @@ builder.Services.AddSingleton<IEventPublisher>(sp =>
         { "OrderCompleted", builder.Configuration["AWS:SNS:OrderCompletedTopicArn"] ?? "arn:aws:sns:us-east-1:000000000000:OrderCompleted" },
         { "PaymentApproved", "arn:aws:sns:us-east-1:471112618001:stackfood-sns-production-topic" }
     };
-    return new SNSEventPublisher(snsClient, topicArns);
+    return new SNSEventPublisher(snsClient, topicArns, logger);
 });
 
 // AWS SQS Configuration

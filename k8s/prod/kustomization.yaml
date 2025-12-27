@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: orders
+
+bases:
+  - ../base
+
+resources:
+  - configmap.yaml
+  - secret.yaml
+
+images:
+  - name: ghcr.io/stack-food/stackfood-api-orders
+    newTag: latest
+
+replicas:
+  - name: stackfood-orders
+    count: 2
