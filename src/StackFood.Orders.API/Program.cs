@@ -105,7 +105,8 @@ namespace StackFood.Orders.API
                     { "OrderCancelled", builder.Configuration["AWS:SNS:OrderCancelledTopicArn"] ?? "arn:aws:sns:us-east-1:000000000000:OrderCancelled" },
                     { "OrderCompleted", builder.Configuration["AWS:SNS:OrderCompletedTopicArn"] ?? "arn:aws:sns:us-east-1:000000000000:OrderCompleted" }
                 };
-                return new SNSEventPublisher(snsClient, topicArns);
+                var logger = sp.GetRequiredService<ILogger<SNSEventPublisher>>();
+                return new SNSEventPublisher(snsClient, topicArns, logger);
             });
 
             // AWS SQS Configuration
