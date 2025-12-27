@@ -36,7 +36,7 @@ spec:
         - name: ghcr-secret
       containers:
         - name: orders
-          image: ghcr.io/stack-food/stackfood-api-orders:latest
+          image: ghcr.io/stack-food/stackfood-orders-api:main
           imagePullPolicy: Always
           ports:
             - containerPort: 8081
