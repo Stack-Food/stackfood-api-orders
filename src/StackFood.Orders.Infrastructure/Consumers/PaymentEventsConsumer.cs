@@ -33,7 +33,7 @@ public class PaymentEventsConsumer : SqsEventsConsumerBase<PaymentEventMessage>
         var snsMessage = JsonSerializer.Deserialize<SnsMessageWrapper>(message.Body);
         if (snsMessage?.Message == null)
         {
-            _logger.LogWarning("Invalid SNS message format: {Body}", message.Body);
+            Logger.LogWarning("Invalid SNS message format: {Body}", message.Body);
             return;
         }
 
