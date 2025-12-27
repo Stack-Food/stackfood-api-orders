@@ -14,7 +14,8 @@ COPY ["tests/StackFood.Orders.Tests/StackFood.Orders.Tests.csproj", "tests/Stack
 RUN dotnet restore "StackFood.Orders.sln"
 
 # Copy all source code
-COPY . .
+COPY src/ src/
+COPY tests/ tests/
 
 # Build and publish
 WORKDIR "/src/src/StackFood.Orders.API"

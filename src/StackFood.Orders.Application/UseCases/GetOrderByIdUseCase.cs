@@ -1,6 +1,6 @@
 using StackFood.Orders.Application.DTOs;
 using StackFood.Orders.Application.Interfaces;
-using StackFood.Orders.Domain.Entities;
+using StackFood.Orders.Application.UseCases.Mappers;
 
 namespace StackFood.Orders.Application.UseCases;
 public class GetOrderByIdUseCase
@@ -15,28 +15,6 @@ public class GetOrderByIdUseCase
     public async Task<OrderDTO?> ExecuteAsync(Guid id)
     {
         var order = await _orderRepository.GetByIdAsync(id);
-        return order == null ? null : MapToDTO(order);
-    }
-
-    private static OrderDTO MapToDTO(Order order)
-    {
-        return new OrderDTO
-        {
-            Id = order.Id,
-            CustomerId = order.CustomerId,
-            CustomerName = order.CustomerName,
-            Status = order.Status.ToString(),
-            TotalAmount = order.TotalAmount.Amount,
-            Items = order.Items.Select(i => new OrderItemDTO
-            {
-                Id = i.Id,
-                ProductId = i.ProductId,
-                ProductName = i.ProductName,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice.Amount,
-                TotalPrice = i.TotalPrice.Amount
-            }).ToList(),
-            CreatedAt = order.CreatedAt
-        };
+        return order == null ? null : OrderMapper.MapToDTO(order);
     }
 }

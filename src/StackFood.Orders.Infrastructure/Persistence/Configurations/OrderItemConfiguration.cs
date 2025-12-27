@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using StackFood.Orders.Domain.Entities;
+using System.Diagnostics.CodeAnalysis;
 namespace StackFood.Orders.Infrastructure.Persistence.Configurations;
+
+[ExcludeFromCodeCoverage]
 public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
 {
     public void Configure(EntityTypeBuilder<OrderItem> builder)

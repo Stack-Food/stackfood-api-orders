@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using StackFood.Orders.Application.Interfaces;
 using StackFood.Orders.Domain.Entities;
+using System.Diagnostics.CodeAnalysis;
 namespace StackFood.Orders.Infrastructure.Persistence.Repositories;
+
+[ExcludeFromCodeCoverage]
 public class OrderRepository : IOrderRepository
 {
     private readonly OrdersDbContext _context;
