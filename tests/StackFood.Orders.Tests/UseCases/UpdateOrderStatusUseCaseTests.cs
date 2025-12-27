@@ -21,7 +21,7 @@ public class UpdateOrderStatusUseCaseTests
     }
 
     [Fact]
-    public async Task ApprovePaymentAsync_WhenOrderExists_ShouldUpdateStatus()
+    public async Task ApprovePaymentAsync_WhenOrderExists_ShouldUpdateStatusAndPublishEvent()
     {
         // Arrange
         var order = CreateSampleOrder();
@@ -35,6 +35,35 @@ public class UpdateOrderStatusUseCaseTests
         // Assert
         order.Status.Should().Be(OrderStatus.PaymentApproved);
         _repositoryMock.Verify(r => r.UpdateAsync(order), Times.Once);
+        _eventPublisherMock.Verify(
+            e => e.PublishAsync("PaymentApproved", It.IsAny<object>()),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task ApprovePaymentAsync_WhenOrderAlreadyApproved_ShouldBeIdempotentAndPublishEvent()
+    {
+        // Arrange
+        var order = CreateSampleOrder();
+        order.ApprovePayment(); // Already approved
+
+        _repositoryMock
+            .Setup(r => r.GetByIdAsync(order.Id))
+            .ReturnsAsync(order);
+
+        // Act
+        await _useCase.ApprovePaymentAsync(order.Id);
+
+        // Assert
+        order.Status.Should().Be(OrderStatus.PaymentApproved);
+        // Should NOT update the order again (idempotent)
+        _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Order>()), Times.Never);
+        // Should still publish the event (idempotent event publishing)
+        _eventPublisherMock.Verify(
+            e => e.PublishAsync("PaymentApproved", It.IsAny<object>()),
+            Times.Once
+        );
     }
 
     [Fact]
