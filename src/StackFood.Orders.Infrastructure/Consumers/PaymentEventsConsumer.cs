@@ -73,6 +73,7 @@ public class PaymentEventsConsumer : SqsEventsConsumerBase<PaymentEventMessage>
     }
 }
 
+[ExcludeFromCodeCoverage]
 public class PaymentEventMessage
 {
     public string? EventType { get; set; }
