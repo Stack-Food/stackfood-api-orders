@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stackfood-orders-config
+  labels:
+    app.kubernetes.io/name: stackfood-orders
+    app.kubernetes.io/part-of: stackfood
+data:
+  # Database Configuration
+  ConnectionStrings__DefaultConnection: "Host=stackfood-postgres.database.svc.cluster.local;Port=5432;Database=stackfood_orders;Username=postgres"
+
+  # External Services
+  ExternalServices__ProductsApiUrl: "http://stackfood-products.products.svc.cluster.local:8080"
+
+  # AWS SNS Configuration
+  AWS__Region: "us-east-1"
+  AWS__UseLocalStack: "false"
+  AWS__SNS__OrderCreatedTopicArn: "REPLACE_WITH_SNS_ORDER_CREATED_TOPIC_ARN"
+  AWS__SNS__OrderCancelledTopicArn: "REPLACE_WITH_SNS_ORDER_CANCELLED_TOPIC_ARN"
+  AWS__SNS__OrderCompletedTopicArn: "REPLACE_WITH_SNS_ORDER_COMPLETED_TOPIC_ARN"
+
+  # AWS SQS Configuration
+  AWS__SQS__PaymentEventsQueueUrl: "REPLACE_WITH_SQS_PAYMENT_EVENTS_QUEUE_URL"
+  AWS__SQS__ProductionEventsQueueUrl: "REPLACE_WITH_SQS_PRODUCTION_EVENTS_QUEUE_URL"
+
+  # Application Settings
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ASPNETCORE_URLS: "http://+:8081"
