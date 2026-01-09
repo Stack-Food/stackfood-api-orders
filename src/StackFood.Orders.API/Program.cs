@@ -154,8 +154,13 @@ namespace StackFood.Orders.API
             var app = builder.Build();
 
             // Configure the HTTP request pipeline
+            app.UsePathBase("/orders");
+
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/orders/swagger/v1/swagger.json", "StackFood orders API v1");
+            });
 
 
             app.UseHttpsRedirection();
