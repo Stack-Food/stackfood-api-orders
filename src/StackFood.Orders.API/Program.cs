@@ -38,6 +38,11 @@ namespace StackFood.Orders.API
                     }
                 });
 
+                c.AddServer(new OpenApiServer
+                {
+                    Url = "https://api.stackfood.com.br/orders",
+                });
+
                 var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 if (File.Exists(xmlPath))
